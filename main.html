@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Quản lý kho thuốc</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #eef1f5;
+            padding: 30px;
+        }
+
+        .wrap {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 1000px;
+            margin: auto;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+    <h3 class="text-center text-primary mb-4">Quản lý Kho thuốc</h3>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Thêm thuốc
+        </div>
+
+        <div class="card-body">
+            <div class="row g-3">
+
+                <div class="col-md-3">
+                    <label>Tên thuốc</label>
+                    <input id="t1" class="form-control">
+                </div>
+
+                <div class="col-md-2">
+                    <label>Loại</label>
+                    <select id="t2" class="form-select">
+                        <option>Kháng sinh</option>
+                        <option>Giảm đau</option>
+                        <option>Vitamin</option>
+                        <option>Tiêu hóa</option>
+                        <option>Khác</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label>Số lượng</label>
+                    <input id="t3" type="number" class="form-control">
+                </div>
+
+                <div class="col-md-2">
+                    <label>Giá</label>
+                    <input id="t4" type="number" class="form-control">
+                </div>
+
+                <div class="col-md-3">
+                    <label>Hạn dùng</label>
+                    <input id="t5" type="date" class="form-control">
+                </div>
+
+                <div class="col-12 text-end">
+                    <button class="btn btn-success" onclick="themThuoc()">Thêm</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
+        <tr>
+            <th>Tên</th>
+            <th>Loại</th>
+            <th>SL</th>
+            <th>Giá</th>
+            <th>Hạn</th>
+            <th>Trạng thái</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody id="listThuoc"></tbody>
+    </table>
+
+</div>
+
+
+<div class="modal fade" id="mdEdit">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5>Sửa thuốc</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="eid">
+
+                <label>Tên</label>
+                <input id="en" class="form-control mb-2">
+
+                <label>Loại</label>
+                <select id="et" class="form-select mb-2">
+                    <option>Kháng sinh</option>
+                    <option>Giảm đau</option>
+                    <option>Vitamin</option>
+                    <option>Tiêu hóa</option>
+                    <option>Khác</option>
+                </select>
+
+                <div class="row">
+                    <div class="col">
+                        <label>SL</label>
+                        <input id="eq" type="number" class="form-control">
+                    </div>
+                    <div class="col">
+                        <label>Giá</label>
+                        <input id="ep" type="number" class="form-control">
+                    </div>
+                </div>
+
+                <label class="mt-2">Hạn</label>
+                <input id="ex" type="date" class="form-control">
+
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+                <button class="btn btn-primary" onclick="luu()">Lưu</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+let ds = [
+    {id: 1, ten: "Vitamin C", loai: "Vitamin", sl: 200, gia: 80000, han: "2026-12-03"},
+    {id: 2, ten: "Kháng sinh", loai: "Kháng sinh", sl: 50, gia: 120000, han: "2027-10-20"},
+    {id: 3, ten: "Paracetamol", loai: "Giảm đau", sl: 100, gia: 50000, han: "2026-11-15"}
+];
+
+let modalEdit = new bootstrap.Modal(document.getElementById("mdEdit"));
+
+function themThuoc() {
+
+    let n = document.getElementById("t1").value.trim();
+    let l = document.getElementById("t2").value;
+    let q = document.getElementById("t3").value;
+    let g = document.getElementById("t4").value;
+    let h = document.getElementById("t5").value;
+
+    if(n == "" || q == "" || h == ""){
+        alert("Thiếu dữ liệu");
+        return;
+    }
+
+    ds.push({
+        id: new Date().getTime(),
+        ten: n,
+        loai: l,
+        sl: parseInt(q),
+        gia: parseInt(g || 0),
+        han: h
+    });
+
+    document.getElementById("t1").value = "";
+    document.getElementById("t3").value = "";
+    document.getElementById("t4").value = "";
+    document.getElementById("t5").value = "";
+
+    ve();
+}
+
+
+function ve(){
+
+    let body = document.getElementById("listThuoc");
+    body.innerHTML = "";
+
+    for(let i=0;i<ds.length;i++){
+
+        let t = ds[i];
+
+        let today = new Date();
+        let d2 = new Date(t.han);
+        let diff = Math.floor((d2 - today) / (1000*60*60*24));
+
+        let st = '<span class="badge bg-success">Còn</span>';
+        let row = "";
+
+        if(diff < 0){
+            st = '<span class="badge bg-danger">Hết hạn</span>';
+            row = "table-danger";
+        }
+        else if(diff <= 30){
+            st = '<span class="badge bg-warning text-dark">Sắp hết</span>';
+            row = "table-warning";
+        }
+
+        let priceFormat = t.gia.toLocaleString("vi-VN") + " đ";
+
+        body.innerHTML += `
+        <tr class="${row}">
+            <td>${t.ten}</td>
+            <td>${t.loai}</td>
+            <td>${t.sl}</td>
+            <td>${priceFormat}</td>
+            <td>${t.han}</td>
+            <td>${st}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="sua(${t.id})">Sửa</button>
+                <button class="btn btn-sm btn-danger" onclick="xoa(${t.id})">Xóa</button>
+            </td>
+        </tr>
+        `;
+    }
+}
+
+
+function xoa(id){
+
+    if(!confirm("Xóa nha?")) return;
+
+    ds = ds.filter(x => x.id != id);
+
+    ve();
+}
+
+
+function sua(id){
+
+    let f = ds.find(a => a.id == id);
+    if(!f) return;
+
+    document.getElementById("eid").value = f.id;
+    document.getElementById("en").value = f.ten;
+    document.getElementById("et").value = f.loai;
+    document.getElementById("eq").value = f.sl;
+    document.getElementById("ep").value = f.gia;
+    document.getElementById("ex").value = f.han;
+
+    modalEdit.show();
+}
+
+
+function luu(){
+
+    let id = document.getElementById("eid").value;
+
+    for(let i=0;i<ds.length;i++){
+        if(ds[i].id == id){
+
+            ds[i].ten = document.getElementById("en").value;
+            ds[i].loai = document.getElementById("et").value;
+            ds[i].sl = parseInt(document.getElementById("eq").value);
+            ds[i].gia = parseInt(document.getElementById("ep").value);
+            ds[i].han = document.getElementById("ex").value;
+
+        }
+    }
+
+    modalEdit.hide();
+    ve();
+}
+
+ve();
+
+</script>
+
+</body>
+</html>
